@@ -1,0 +1,18 @@
+{
+  "name": "scripts",
+  "version": "1.0.0",
+  "description": "my-project/\r ├── db/\r │   ├── pool.js         # Database connection pool setup\r │   ├── queries.js      # CRUD operations for users/comments\r │   ├── populate_db.js  # Example usage: create tables, insert seed data\r │   ├── update_db.js    # Update database schema or data\r ├── data/\r │   ├── app_data.json   # Optional: JSON file for seed data\r ├── .env                # Environment variables (template provided)\r ├── index.js            # Main app entry point\r ├── Procfile            # Heroku process file\r ├── package.json        # Node.js package configuration\r └── README.md           # Project setup and instructions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  }
+}
