@@ -63,16 +63,16 @@ https://github.com/new
 
 ---
 
-#### **3. Create the Database Locally Using PostgreSQL**
+#### **3. Setup Database Functions Using PostgreSQL**
 1. **Update `db/queries.js`**:
-   - Add functions to create the required tables (e.g., `users`, `comments`) for the project.
+   - imports pool.js code
+   - Add functions to create the required tables for the project, and functions for queries that can create data in each of the tables
    - Include proper error handling and meaningful logs for debugging.
 
 2. **Update `db/populate_db.js`**:
-   - Use functions from `queries.js` to create the tables.
-   - Add initial data.
+   - Use functions from `queries.js` to create the tables and add initial data.
    - Include logs to confirm successful operations or errors.
-
+    - 
 ---
 
 
@@ -89,6 +89,7 @@ https://github.com/new
    - Add a Heroku Postgres add-on:
      ```bash
      heroku addons:create heroku-postgresql:essential-0 --app <your-app-name>
+     
      ```
    - Retrieve the `DATABASE_URL`(db can take a min to setup, be patient) :
      ```bash

@@ -1,16 +1,30 @@
-const { createTables, createUser } = require('./queries');
-
-async function main() {
+const {
+    createUsersTable,
+    createNotesTable,
+    createTagsTable,
+    insertUser,
+    insertTag,
+    insertNote,
+  } = require('./queries');
+  
+  const seedData = async () => {
     try {
-        await createTables();
-
-        console.log('Populating database with sample data...');
-        await createUser('John Doe', 'https://example.com/image1.png');
-        await createUser('Jane Smith', 'https://example.com/image2.png');
-        console.log('Sample data added successfully.');
+      // Step 1: Create tables
+      await createUsersTable();
+      await createNotesTable();
+      await createTagsTable();
+  
+      // Step 2: Insert seed data
+      const userId = await insertUser('jane_23');
+  
+      await insertNote('Meeting Notes', 'Discuss project deadlines.', userId);
+      await insertNote('Grocery List', 'Buy milk, eggs, and bread.', userId);
+  
+      console.log('Seed data inserted successfully.');
     } catch (error) {
-        console.error('Error populating database:', error.message);
+      console.error('Error during database seeding:', error.message);
     }
-}
-
-main();
+  };
+  
+  seedData();
+  
