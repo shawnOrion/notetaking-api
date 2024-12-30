@@ -141,6 +141,79 @@ const getTagsForUser = async (userId) => {
     console.error('Error fetching tags for user:', error.message);
   }
 };
+// Get user by ID
+const getUserById = async (userId) => {
+  const query = `
+    SELECT * FROM Users WHERE id = $1;
+  `;
+  try {
+    const { rows } = await pool.query(query, [userId]);
+    return rows[0]; // Return the first user (ID is unique)
+  } catch (error) {
+    console.error('Error fetching user by ID:', error.message);
+  }
+};
+
+// Update a note
+const updateNote = async (noteId, title, content) => {
+  const query = `
+    UPDATE Notes
+    SET title = $1, content = $2, updatedAt = CURRENT_TIMESTAMP
+    WHERE id = $3
+    RETURNING *;
+  `;
+  try {
+    const { rows } = await pool.query(query, [title, content, noteId]);
+    return rows[0];
+  } catch (error) {
+    console.error('Error updating note:', error.message);
+  }
+};
+
+// Delete a note
+const deleteNote = async (noteId) => {
+  const query = `
+    DELETE FROM Notes WHERE id = $1 RETURNING id;
+  `;
+  try {
+    const { rows } = await pool.query(query, [noteId]);
+    return rows[0];
+  } catch (error) {
+    console.error('Error deleting note:', error.message);
+  }
+};
+
+// Archive/Unarchive a note
+const toggleArchiveNote = async (noteId, isArchived) => {
+  const query = `
+    UPDATE Notes
+    SET isArchived = $1, updatedAt = CURRENT_TIMESTAMP
+    WHERE id = $2
+    RETURNING *;
+  `;
+  try {
+    const { rows } = await pool.query(query, [isArchived, noteId]);
+    return rows[0];
+  } catch (error) {
+    console.error('Error toggling archive status:', error.message);
+  }
+};
+
+// Filter notes for a user
+const filterNotes = async (userId, archived, title) => {
+  const query = `
+    SELECT * FROM Notes
+    WHERE userId = $1
+    AND ($2::BOOLEAN IS NULL OR isArchived = $2)
+    AND ($3::TEXT IS NULL OR title ILIKE '%' || $3 || '%');
+  `;
+  try {
+    const { rows } = await pool.query(query, [userId, archived, title]);
+    return rows;
+  } catch (error) {
+    console.error('Error filtering notes:', error.message);
+  }
+};
 
 module.exports = {
   createUsersTable,
@@ -152,4 +225,9 @@ module.exports = {
   getAllUsers,
   getNotesForUser,
   getTagsForUser,
+  getUserById,
+  updateNote,
+  deleteNote,
+  toggleArchiveNote,
+  filterNotes,
 };
