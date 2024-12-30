@@ -1,21 +1,23 @@
-const { createUserTable, getUsers, createUser } = require('./queries');
+const { dropUsersTable, dropNotesTable, dropTagsTable } = require('./queries');
 
 async function main() {
     try {
-        console.log('Ensuring the users table exists...');
-        await createUserTable();
+        console.log('Dropping the Notes table...');
+        await dropNotesTable();
+        console.log('Dropped the Notes table.');
 
-        console.log('Adding a new user...');
-        const user = await createUser('test_user');
-        console.log('Created user:', user);
+        console.log('Dropping the Tags table...');
+        await dropTagsTable();
+        console.log('Dropped the Tags table.');
 
-        console.log('Fetching all users...');
-        const users = await getUsers();
-        console.log('All users:', users);
+        console.log('Dropping the Users table...');
+        await dropUsersTable();
+        console.log('Dropped the Users table.');
+
     } catch (error) {
-        console.error('Error during test script execution:', error.message);
+        console.error('Error during table drop execution:', error.message);
     } finally {
-        console.log('Test script complete.');
+        console.log('Drop tables script complete.');
         process.exit();
     }
 }

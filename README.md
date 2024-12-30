@@ -1,6 +1,6 @@
 ### API DOCs
 
-| HTTP Method | Route                             | Description                           |
+| HTTP Method | Route                            Hey, Cortana.  | Description                           |
 |-------------|-----------------------------------|---------------------------------------|
 | GET         | `/api/users`                     | Fetch all users                      |
 | GET         | `/api/users/:userId`             | Fetch a user by ID                   |
@@ -12,7 +12,7 @@
 | POST        | `/api/tags`                      | Create a new tag                     |
 | PUT         | `/api/notes/:noteId`             | Update a note                        |
 | PUT         | `/api/notes/:noteId/archive`     | Archive or unarchive a note          |
-| DELETE      | `/api/notes/:noteId`             | Delete a note                        |
+Hey, Cortana. | DELETE      | `/api/notes/:noteId`             | Delete a note                        |
 
 
 
@@ -167,3 +167,105 @@ https://github.com/new
    ```
 
 ---
+
+---
+
+Here's a structured documentation section for your **UI Notes** based on your requirements, ensuring it aligns with how you worked with AI in the past:
+
+---
+
+### **UI Notes: Frontend Note CRUD**
+
+#### **1. Define Classes**
+- Create classes for `User` and `Note` to organize and structure data.
+- Example Data Types:
+  - **Users**: `[ { id: 1, username: 'jane_23' } ]`
+  - **Notes** for user ID 1:
+    ```json
+    {
+      "id": 1,
+      "title": "Meeting Notes",
+      "content": "Discuss project deadlines.",
+      "createdat": "2024-12-31T01:41:29.634Z",
+      "updatedat": "2024-12-31T01:41:29.634Z",
+      "isarchived": false,
+      "userid": 1,
+      "tagids": []
+    }
+    ```
+
+---
+
+#### **2. Initialize User**
+- **Init Function**: Create a function that initializes the test user data.
+- **Fetch User by ID**: Use `GET /api/users/:userId` to fetch a user by their ID.
+- Assign the user data to a **global variable** to simplify incremental testing of the notes app.
+- Example Test User:
+  ```json
+  {
+    "id": 1,
+    "username": "jane_23"
+  }
+  ```
+
+---
+
+#### **3. Build UI for Viewing Notes**
+- **UI Components**:
+  - **Vertical List of Notes**:
+    - Each note is displayed as a button (container).
+    - Show the title and the first 80 characters of the note content.
+  - **Where to Get Data**:
+    - API Endpoint: `/api/users/:userId/notes`
+    - Example Data Object:
+      ```json
+      {
+        "id": 1,
+        "title": "Meeting Notes",
+        "content": "Discuss project deadlines.",
+        "createdat": "2024-12-31T01:41:29.634Z",
+        "updatedat": "2024-12-31T01:41:29.634Z",
+        "isarchived": false,
+        "userid": 1,
+        "tagids": []
+      }
+      ```
+
+---
+
+#### **4. View States**
+- **Enum for View States**:
+  - Use an enum to manage and identify different UI states.
+  - Initial view state: `'home'`.
+- **Track Current View State**:
+  - Maintain a global variable for the current view state.
+  - Components are conditionally rendered based on the view state.
+
+#### **5. Home Section UI**
+- **Component Structure**:
+  - Header
+  - Notes List (conditionally rendered based on the view state).
+- **Preparing for Extensibility**:
+  - Move existing UI into the home section component.
+  - Simplify future expansion of view states.
+
+---
+
+#### **6. Build UI for Viewing a Note**
+- **View State**:
+  - Called `'note'`.
+  - Triggered by clicking a note in the home view.
+- **UI Components**:
+  - **Top Row**:
+    - **Go Back Button**: Changes the view state to `'home'`.
+    - **Delete Button**:
+      - Black-on-white trash icon.
+      - URL: [https://play.rosebud.ai/assets/icon-delete.jpg?Xvlb](https://play.rosebud.ai/assets/icon-delete.jpg?Xvlb).
+  - **Note Section**:
+    - Header displaying the note title.
+    - Vertical list of note details:
+      - Tags
+      - Last edited timestamp (formatted).
+    - Text content:
+      - Style: `whitespace: pre-wrap`.
+      - Scrollable if necessary.

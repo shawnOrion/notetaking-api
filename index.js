@@ -87,14 +87,18 @@ app.post('/api/users', async (req, res) => {
 // Create a new note
 app.post('/api/notes', async (req, res) => {
     const { title, content, userId, tagIds } = req.body;
+
+    console.log('Received request body:', req.body); // Log the incoming request body
+
     try {
-        const noteId = await db.insertNote(title, content, userId, tagIds || []);
-        res.status(201).json({ id: noteId });
+        const note = await db.insertNote(title, content, userId, tagIds || []);
+        res.status(201).json(note); // Return the entire note object directly
     } catch (error) {
         console.error('Error creating note:', error.message);
         res.status(500).json({ error: 'Failed to create note.' });
     }
 });
+
 
 // Create a new tag
 app.post('/api/tags', async (req, res) => {

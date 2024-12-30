@@ -56,6 +56,50 @@ const createTagsTable = async () => {
   }
 };
 
+// Drop Users Table
+const dropUsersTable = async () => {
+  const query = `
+      DROP TABLE IF EXISTS Users CASCADE;
+  `;
+  try {
+      await pool.query(query);
+      console.log('Users table dropped.');
+  } catch (error) {
+      console.error('Error dropping Users table:', error.message);
+      throw error;
+  }
+};
+
+// Drop Notes Table
+const dropNotesTable = async () => {
+  const query = `
+      DROP TABLE IF EXISTS Notes CASCADE;
+  `;
+  try {
+      await pool.query(query);
+      console.log('Notes table dropped.');
+  } catch (error) {
+      console.error('Error dropping Notes table:', error.message);
+      throw error;
+  }
+};
+
+// Drop Tags Table
+const dropTagsTable = async () => {
+  const query = `
+      DROP TABLE IF EXISTS Tags CASCADE;
+  `;
+  try {
+      await pool.query(query);
+      console.log('Tags table dropped.');
+  } catch (error) {
+      console.error('Error dropping Tags table:', error.message);
+      throw error;
+  }
+};
+
+
+
 // Insert User
 const insertUser = async (username) => {
   const query = `
@@ -72,19 +116,25 @@ const insertUser = async (username) => {
 };
 
 // Insert Note
+// Insert Note
 const insertNote = async (title, content, userId, tagIds = []) => {
+  console.log('Data before insertion:', { title, content, userId, tagIds }); // Log data structure before insertion
+
   const query = `
     INSERT INTO Notes (title, content, userId, tagIds)
     VALUES ($1, $2, $3, $4)
-    RETURNING id;
+    RETURNING id, title, content, createdAt, updatedAt, isArchived, userId, tagIds;
   `;
   try {
     const { rows } = await pool.query(query, [title, content, userId, tagIds]);
-    return rows[0].id;
+    console.log('Inserted note data:', rows[0]); // Log the data returned from the database
+    return rows[0]; // Return full note data for verification
   } catch (error) {
     console.error('Error inserting note:', error.message);
+    throw error; // Rethrow error for handling in the calling function
   }
 };
+
 
 // Insert Tag
 const insertTag = async (name, userId) => {
@@ -216,6 +266,9 @@ const filterNotes = async (userId, archived, title) => {
 };
 
 module.exports = {
+  dropUsersTable,
+  dropNotesTable,
+  dropTagsTable,
   createUsersTable,
   createNotesTable,
   createTagsTable,
