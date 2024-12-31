@@ -152,14 +152,77 @@ app.post('/api/notes', async (req, res) => {
 
 // Create a new tag
 app.post('/api/tags', async (req, res) => {
-    const { name, userId } = req.body;
-    try {
-        const tagId = await db.insertTag(name, userId);
-        res.status(201).json({ id: tagId });
-    } catch (error) {
-        console.error('Error creating tag:', error.message);
-        res.status(500).json({ error: 'Failed to create tag.' });
+  const { name, userId } = req.body;
+
+  try {
+    const tag = await db.insertTag(name, userId);
+    res.status(201).json(tag);
+  } catch (error) {
+    console.error('Error creating tag:', error.message);
+    res.status(500).json({ error: 'Failed to create tag.' });
+  }
+});
+
+// Get all tags for a user
+app.get('/api/users/:userId/tags', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const tags = await db.getTagsForUser(userId);
+    res.status(200).json(tags);
+  } catch (error) {
+    console.error('Error fetching tags for user:', error.message);
+    res.status(500).json({ error: 'Failed to fetch tags.' });
+  }
+});
+
+// Get a tag by ID
+app.get('/api/tags/:tagId', async (req, res) => {
+  const { tagId } = req.params;
+
+  try {
+    const tag = await db.getTagById(tagId);
+    if (!tag) {
+      return res.status(404).json({ error: 'Tag not found.' });
     }
+    res.status(200).json(tag);
+  } catch (error) {
+    console.error('Error fetching tag by ID:', error.message);
+    res.status(500).json({ error: 'Failed to fetch tag.' });
+  }
+});
+
+// Update a tag
+app.put('/api/tags/:tagId', async (req, res) => {
+  const { tagId } = req.params;
+  const { name } = req.body;
+
+  try {
+    const updatedTag = await db.updateTag(tagId, name);
+    if (!updatedTag) {
+      return res.status(404).json({ error: 'Tag not found.' });
+    }
+    res.status(200).json(updatedTag);
+  } catch (error) {
+    console.error('Error updating tag:', error.message);
+    res.status(500).json({ error: 'Failed to update tag.' });
+  }
+});
+
+// Delete a tag
+app.delete('/api/tags/:tagId', async (req, res) => {
+  const { tagId } = req.params;
+
+  try {
+    const deletedTag = await db.deleteTag(tagId);
+    if (!deletedTag) {
+      return res.status(404).json({ error: 'Tag not found.' });
+    }
+    res.status(200).json(deletedTag);
+  } catch (error) {
+    console.error('Error deleting tag:', error.message);
+    res.status(500).json({ error: 'Failed to delete tag.' });
+  }
 });
 
 // Update a note

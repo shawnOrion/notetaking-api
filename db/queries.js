@@ -216,13 +216,87 @@ const insertTag = async (name, userId) => {
   const query = `
     INSERT INTO Tags (name, userId)
     VALUES ($1, $2)
-    RETURNING id;
+    RETURNING id, name, userId;
   `;
   try {
     const { rows } = await pool.query(query, [name, userId]);
-    return rows[0].id;
+    return rows[0]; // Return the newly created tag
   } catch (error) {
     console.error('Error inserting tag:', error.message);
+    throw error;
+  }
+};
+
+// Get all tags for a user
+const getTagsForUser = async (userId) => {
+  const query = `
+    SELECT id, name, userId FROM Tags
+    WHERE userId = $1;
+  `;
+  try {
+    const { rows } = await pool.query(query, [userId]);
+    return rows; // Return an array of tags
+  } catch (error) {
+    console.error('Error fetching tags for user:', error.message);
+    throw error;
+  }
+};
+
+// Get a tag by ID
+const getTagById = async (tagId) => {
+  const query = `
+    SELECT id, name, userId FROM Tags
+    WHERE id = $1;
+  `;
+  try {
+    const { rows } = await pool.query(query, [tagId]);
+    if (rows.length === 0) {
+      console.log(`No tag found with ID: ${tagId}`);
+      return null;
+    }
+    return rows[0]; // Return the tag object
+  } catch (error) {
+    console.error('Error fetching tag by ID:', error.message);
+    throw error;
+  }
+};
+
+// Update an existing tag
+const updateTag = async (tagId, name) => {
+  const query = `
+    UPDATE Tags
+    SET name = $1
+    WHERE id = $2
+    RETURNING id, name, userId;
+  `;
+  try {
+    const { rows } = await pool.query(query, [name, tagId]);
+    if (rows.length === 0) {
+      console.log(`No tag found to update with ID: ${tagId}`);
+      return null;
+    }
+    return rows[0]; // Return the updated tag object
+  } catch (error) {
+    console.error('Error updating tag:', error.message);
+    throw error;
+  }
+};
+
+// Delete a tag by ID
+const deleteTag = async (tagId) => {
+  const query = `
+    DELETE FROM Tags WHERE id = $1 RETURNING id;
+  `;
+  try {
+    const { rows } = await pool.query(query, [tagId]);
+    if (rows.length === 0) {
+      console.log(`No tag found to delete with ID: ${tagId}`);
+      return null;
+    }
+    return rows[0]; // Return the ID of the deleted tag
+  } catch (error) {
+    console.error('Error deleting tag:', error.message);
+    throw error;
   }
 };
 
@@ -240,19 +314,6 @@ const getNotesForUser = async (userId) => {
   }
 };
 
-// Get Tags for a User
-const getTagsForUser = async (userId) => {
-  const query = `
-    SELECT * FROM Tags
-    WHERE userId = $1;
-  `;
-  try {
-    const { rows } = await pool.query(query, [userId]);
-    return rows;
-  } catch (error) {
-    console.error('Error fetching tags for user:', error.message);
-  }
-};
 
 // Update a note
 const updateNote = async (noteId, title, content) => {
@@ -328,10 +389,13 @@ module.exports = {
   createNotesTable,
   createTagsTable,
   insertNote,
-  insertTag,
+  insertTag,      // Create a new tag
+  getTagsForUser, // Get all tags for a user
+  getTagById,     // Get a tag by its ID
+  updateTag,      // Update an existing tag
+  deleteTag,      // Delete a tag by its ID
   getAllUsers,
   getNotesForUser,
-  getTagsForUser,
   updateNote,
   deleteNote,
   toggleArchiveNote,
