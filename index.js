@@ -11,29 +11,79 @@ app.use(cors());
 
 // Routes
 
-// Get all users
-app.get('/api/users', async (req, res) => {
+// Create a new user
+app.post('/api/users', async (req, res) => {
+    const { username } = req.body;
+  
     try {
-        const users = await db.getAllUsers();
-        res.status(200).json(users);
+      const user = await db.insertUser(username);
+      res.status(201).json(user);
     } catch (error) {
-        console.error('Error fetching users:', error.message);
-        res.status(500).json({ error: 'Failed to fetch users.' });
+      console.error('Error creating user:', error.message);
+      res.status(500).json({ error: 'Failed to create user.' });
     }
-});
-
-// Get user by ID
-app.get('/api/users/:userId', async (req, res) => {
+  });
+  
+  // Get all users
+  app.get('/api/users', async (req, res) => {
+    try {
+      const users = await db.getAllUsers();
+      res.status(200).json(users);
+    } catch (error) {
+      console.error('Error fetching users:', error.message);
+      res.status(500).json({ error: 'Failed to fetch users.' });
+    }
+  });
+  
+  // Get user by ID
+  app.get('/api/users/:userId', async (req, res) => {
     const { userId } = req.params;
+  
     try {
-        const user = await db.getUserById(userId);
-        if (!user) return res.status(404).json({ error: 'User not found' });
-        res.status(200).json(user);
+      const user = await db.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found.' });
+      }
+      res.status(200).json(user);
     } catch (error) {
-        console.error('Error fetching user:', error.message);
-        res.status(500).json({ error: 'Failed to fetch user.' });
+      console.error('Error fetching user by ID:', error.message);
+      res.status(500).json({ error: 'Failed to fetch user.' });
     }
-});
+  });
+  
+  // Update user
+  app.put('/api/users/:userId', async (req, res) => {
+    const { userId } = req.params;
+    const { username } = req.body;
+  
+    try {
+      const updatedUser = await db.updateUser(userId, username);
+      if (!updatedUser) {
+        return res.status(404).json({ error: 'User not found.' });
+      }
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      console.error('Error updating user:', error.message);
+      res.status(500).json({ error: 'Failed to update user.' });
+    }
+  });
+  
+  // Delete user
+  app.delete('/api/users/:userId', async (req, res) => {
+    const { userId } = req.params;
+  
+    try {
+      const deletedUser = await db.deleteUser(userId);
+      if (!deletedUser) {
+        return res.status(404).json({ error: 'User not found.' });
+      }
+      res.status(200).json(deletedUser);
+    } catch (error) {
+      console.error('Error deleting user:', error.message);
+      res.status(500).json({ error: 'Failed to delete user.' });
+    }
+  });
+  
 
 // Get notes for a user
 app.get('/api/users/:userId/notes', async (req, res) => {

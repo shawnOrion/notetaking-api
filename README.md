@@ -168,12 +168,6 @@ https://github.com/new
 
 ---
 
----
-
-Here's a structured documentation section for your **UI Notes** based on your requirements, ensuring it aligns with how you worked with AI in the past:
-
----
-
 ### **UI Notes: Frontend Note CRUD**
 
 #### **1. Define Classes**

@@ -16,6 +16,8 @@ const createUsersTable = async () => {
   }
 };
 
+
+
 // Create Notes Table
 const createNotesTable = async () => {
   const query = `
@@ -100,20 +102,97 @@ const dropTagsTable = async () => {
 
 
 
-// Insert User
+const pool = require('./pool');
+
+// Create a new user
 const insertUser = async (username) => {
   const query = `
     INSERT INTO Users (username)
     VALUES ($1)
-    RETURNING id;
+    RETURNING id, username;
   `;
   try {
     const { rows } = await pool.query(query, [username]);
-    return rows[0].id;
+    return rows[0]; // Return the newly created user
   } catch (error) {
     console.error('Error inserting user:', error.message);
+    throw error;
   }
 };
+
+// Get all users
+const getAllUsers = async () => {
+  const query = `
+    SELECT id, username FROM Users;
+  `;
+  try {
+    const { rows } = await pool.query(query);
+    return rows; // Return an array of users
+  } catch (error) {
+    console.error('Error fetching users:', error.message);
+    throw error;
+  }
+};
+
+// Get user by ID
+const getUserById = async (userId) => {
+  const query = `
+    SELECT id, username FROM Users WHERE id = $1;
+  `;
+  try {
+    const { rows } = await pool.query(query, [userId]);
+    if (rows.length === 0) {
+      console.log(`No user found with ID: ${userId}`);
+      return null;
+    }
+    return rows[0]; // Return the user object
+  } catch (error) {
+    console.error('Error fetching user by ID:', error.message);
+    throw error;
+  }
+};
+
+// Update an existing user
+const updateUser = async (userId, username) => {
+  const query = `
+    UPDATE Users
+    SET username = $1
+    WHERE id = $2
+    RETURNING id, username;
+  `;
+  try {
+    const { rows } = await pool.query(query, [username, userId]);
+    if (rows.length === 0) {
+      console.log(`No user found to update with ID: ${userId}`);
+      return null;
+    }
+    return rows[0]; // Return the updated user object
+  } catch (error) {
+    console.error('Error updating user:', error.message);
+    throw error;
+  }
+};
+
+// Delete a user by ID
+const deleteUser = async (userId) => {
+  const query = `
+    DELETE FROM Users WHERE id = $1 RETURNING id;
+  `;
+  try {
+    const { rows } = await pool.query(query, [userId]);
+    if (rows.length === 0) {
+      console.log(`No user found to delete with ID: ${userId}`);
+      return null;
+    }
+    return rows[0]; // Return the ID of the deleted user
+  } catch (error) {
+    console.error('Error deleting user:', error.message);
+    throw error;
+  }
+};
+
+
+
 
 // Insert Note
 // Insert Note
@@ -151,19 +230,6 @@ const insertTag = async (name, userId) => {
   }
 };
 
-// Get All Users
-const getAllUsers = async () => {
-  const query = `
-    SELECT * FROM Users;
-  `;
-  try {
-    const { rows } = await pool.query(query);
-    return rows;
-  } catch (error) {
-    console.error('Error fetching users:', error.message);
-  }
-};
-
 // Get Notes for a User
 const getNotesForUser = async (userId) => {
   const query = `
@@ -189,18 +255,6 @@ const getTagsForUser = async (userId) => {
     return rows;
   } catch (error) {
     console.error('Error fetching tags for user:', error.message);
-  }
-};
-// Get user by ID
-const getUserById = async (userId) => {
-  const query = `
-    SELECT * FROM Users WHERE id = $1;
-  `;
-  try {
-    const { rows } = await pool.query(query, [userId]);
-    return rows[0]; // Return the first user (ID is unique)
-  } catch (error) {
-    console.error('Error fetching user by ID:', error.message);
   }
 };
 
@@ -266,19 +320,22 @@ const filterNotes = async (userId, archived, title) => {
 };
 
 module.exports = {
+  insertUser,       // Create a new user
+  getAllUsers,      // Fetch all users
+  getUserById,      // Fetch a user by ID
+  updateUser,       // Update an existing user
+  deleteUser,       // Delete a user by ID
   dropUsersTable,
   dropNotesTable,
   dropTagsTable,
   createUsersTable,
   createNotesTable,
   createTagsTable,
-  insertUser,
   insertNote,
   insertTag,
   getAllUsers,
   getNotesForUser,
   getTagsForUser,
-  getUserById,
   updateNote,
   deleteNote,
   toggleArchiveNote,
