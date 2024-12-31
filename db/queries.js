@@ -100,10 +100,6 @@ const dropTagsTable = async () => {
   }
 };
 
-
-
-const pool = require('./pool');
-
 // Create a new user
 const insertUser = async (username) => {
   const query = `
