@@ -1,19 +1,22 @@
 ### API DOCs
 
-| HTTP Method | Route                            Hey, Cortana.  | Description                           |
+| HTTP Method | Route                            | Description                           |
 |-------------|-----------------------------------|---------------------------------------|
 | GET         | `/api/users`                     | Fetch all users                      |
 | GET         | `/api/users/:userId`             | Fetch a user by ID                   |
 | GET         | `/api/users/:userId/notes`       | Fetch all notes for a user           |
 | GET         | `/api/users/:userId/tags`        | Fetch all tags for a user            |
 | GET         | `/api/users/:userId/notes/filter`| Fetch filtered notes for a user      |
+| GET         | `/api/tags/:tagId`               | Fetch a tag by ID                    |
 | POST        | `/api/users`                     | Create a new user                    |
 | POST        | `/api/notes`                     | Create a new note                    |
 | POST        | `/api/tags`                      | Create a new tag                     |
+| POST        | `/api/tags/bulk`                 | Create multiple new tags             |
 | PUT         | `/api/notes/:noteId`             | Update a note                        |
 | PUT         | `/api/notes/:noteId/archive`     | Archive or unarchive a note          |
-Hey, Cortana. | DELETE      | `/api/notes/:noteId`             | Delete a note                        |
-
+| PUT         | `/api/tags/:tagId`               | Update a tag                         |
+| DELETE      | `/api/notes/:noteId`             | Delete a note                        |
+| DELETE      | `/api/tags/:tagId`               | Delete a tag                         |
 
 
 ### **README: Command Cheat Sheet**

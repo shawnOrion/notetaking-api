@@ -228,17 +228,25 @@ app.delete('/api/tags/:tagId', async (req, res) => {
 // Update a note
 app.put('/api/notes/:noteId', async (req, res) => {
     const { noteId } = req.params;
-    const { title, content } = req.body;
+    const { title, content, tagIds } = req.body;
+  
+    console.log('Update request received for note:', { noteId, title, content, tagIds }); // Log incoming data
+  
     try {
-        const updatedNote = await db.updateNote(noteId, title, content);
-        if (!updatedNote) return res.status(404).json({ error: 'Note not found' });
-        res.status(200).json(updatedNote);
+      const updatedNote = await db.updateNote(noteId, title, content, tagIds || []);
+      if (!updatedNote) {
+        console.error('Note not found:', { noteId });
+        return res.status(404).json({ error: 'Note not found' });
+      }
+  
+      console.log('Successfully updated note:', updatedNote); // Log success
+      res.status(200).json(updatedNote);
     } catch (error) {
-        console.error('Error updating note:', error.message);
-        res.status(500).json({ error: 'Failed to update note.' });
+      console.error('Error updating note:', error.message); // Log error
+      res.status(500).json({ error: 'Failed to update note.' });
     }
 });
-
+  
 // Delete a note
 app.delete('/api/notes/:noteId', async (req, res) => {
     const { noteId } = req.params;

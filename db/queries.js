@@ -316,20 +316,26 @@ const getNotesForUser = async (userId) => {
 
 
 // Update a note
-const updateNote = async (noteId, title, content) => {
+const updateNote = async (noteId, title, content, tagIds = []) => {
   const query = `
     UPDATE Notes
-    SET title = $1, content = $2, updatedAt = CURRENT_TIMESTAMP
-    WHERE id = $3
-    RETURNING *;
+    SET title = $1, content = $2, tagIds = $3, updatedAt = CURRENT_TIMESTAMP
+    WHERE id = $4
+    RETURNING id, title, content, createdAt, updatedAt, isArchived, userId, tagIds;
   `;
   try {
-    const { rows } = await pool.query(query, [title, content, noteId]);
-    return rows[0];
+    const { rows } = await pool.query(query, [title, content, tagIds, noteId]);
+    if (rows.length === 0) {
+      console.log(`No note found to update with ID: ${noteId}`);
+      return null;
+    }
+    return rows[0]; // Return the updated note
   } catch (error) {
-    console.error('Error updating note:', error.message);
+    console.error('Error updating note in database:', error.message);
+    throw error;
   }
 };
+
 
 // Delete a note
 const deleteNote = async (noteId) => {
