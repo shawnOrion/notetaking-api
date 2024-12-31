@@ -86,17 +86,28 @@ app.post('/api/users', async (req, res) => {
   
 
 // Get notes for a user
+// Get notes for a user
 app.get('/api/users/:userId/notes', async (req, res) => {
     const { userId } = req.params;
+  
+    console.log('Request received for fetching notes:', { userId }); // Log the incoming request
+  
     try {
-        const notes = await db.getNotesForUser(userId);
-        res.status(200).json(notes);
+      const notes = await db.getNotesForUser(userId);
+      
+      if (!notes || notes.length === 0) {
+        console.log('No notes found for user:', { userId }); // Log if no notes are found
+        return res.status(404).json({ error: 'No notes found for the user.' });
+      }
+  
+      console.log('Fetched notes for user:', { userId, notes }); // Log the fetched notes
+      res.status(200).json(notes);
     } catch (error) {
-        console.error(`Error fetching notes for user ID ${userId}:`, error.message);
-        res.status(500).json({ error: 'Failed to fetch notes.' });
+      console.error('Error fetching notes for user:', { userId, error: error.message }); // Log the error details
+      res.status(500).json({ error: 'Failed to fetch notes for the user.' });
     }
-});
-
+  });
+  
 // Get tags for a user
 app.get('/api/users/:userId/tags', async (req, res) => {
     const { userId } = req.params;
