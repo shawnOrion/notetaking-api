@@ -369,10 +369,18 @@ const toggleArchiveNote = async (noteId, isArchived) => {
 // Search notes for a user
 const searchNotes = async (userId, searchTerm) => {
   const query = `
-    SELECT * FROM Notes
-    WHERE userId = $1
-    AND ($2::TEXT IS NULL OR (title ILIKE '%' || $2 || '%' OR content ILIKE '%' || $2 || '%'))
-    ORDER BY updatedAt DESC;
+    SELECT DISTINCT n.*
+    FROM Notes n
+    LEFT JOIN Tags t
+    ON t.id = ANY(n.tagIds)
+    WHERE n.userId = $1
+    AND (
+      $2::TEXT IS NULL 
+      OR n.title ILIKE '%' || $2 || '%' 
+      OR n.content ILIKE '%' || $2 || '%' 
+      OR t.name ILIKE '%' || $2 || '%'
+    )
+    ORDER BY n.updatedAt DESC;
   `;
   try {
     const { rows } = await pool.query(query, [userId, searchTerm]);
@@ -382,6 +390,7 @@ const searchNotes = async (userId, searchTerm) => {
     throw error; // Re-throw for caller to handle
   }
 };
+
 
 
 module.exports = {
