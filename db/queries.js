@@ -366,21 +366,23 @@ const toggleArchiveNote = async (noteId, isArchived) => {
   }
 };
 
-// Filter notes for a user
-const filterNotes = async (userId, archived, title) => {
+// Search notes for a user
+const searchNotes = async (userId, searchTerm) => {
   const query = `
     SELECT * FROM Notes
     WHERE userId = $1
-    AND ($2::BOOLEAN IS NULL OR isArchived = $2)
-    AND ($3::TEXT IS NULL OR title ILIKE '%' || $3 || '%');
+    AND ($2::TEXT IS NULL OR (title ILIKE '%' || $2 || '%' OR content ILIKE '%' || $2 || '%'))
+    ORDER BY updatedAt DESC;
   `;
   try {
-    const { rows } = await pool.query(query, [userId, archived, title]);
+    const { rows } = await pool.query(query, [userId, searchTerm]);
     return rows;
   } catch (error) {
-    console.error('Error filtering notes:', error.message);
+    console.error('Error searching notes:', error.message);
+    throw error; // Re-throw for caller to handle
   }
 };
+
 
 module.exports = {
   insertUser,       // Create a new user
@@ -405,5 +407,5 @@ module.exports = {
   updateNote,
   deleteNote,
   toggleArchiveNote,
-  filterNotes,
+  searchNotes,
 };

@@ -162,24 +162,26 @@ app.get('/api/users/:userId/notes', async (req, res) => {
     }
   });
 // Filter notes for a user
-app.get('/api/users/:userId/notes/filter', async (req, res) => {
-  console.group('Filter Notes for User');
+// Search notes for a user
+app.get('/api/users/:userId/notes/search', async (req, res) => {
+  console.group('Search Notes for User');
   const { userId } = req.params;
-  const { archived, title } = req.query;
+  const { searchTerm } = req.query; // Extract search term from query parameters
   console.log('Request Params:', { userId });
-  console.log('Query Params:', { archived, title });
+  console.log('Query Params:', { searchTerm });
 
   try {
-    const notes = await db.filterNotes(userId, archived === 'true', title);
+    const notes = await db.searchNotes(userId, searchTerm);
     console.log('Response Data:', notes);
-    res.status(200).json(notes);
+    res.status(200).json(notes); // Return the matching notes
   } catch (error) {
-    console.error('Error filtering notes:', error.message);
-    res.status(500).json({ error: 'Failed to filter notes.' });
+    console.error('Error searching notes for user:', error.message);
+    res.status(500).json({ error: 'Failed to search notes for the user.' });
   } finally {
     console.groupEnd();
   }
 });
+
 
 // Get tags for a user
 app.get('/api/users/:userId/tags', async (req, res) => {
