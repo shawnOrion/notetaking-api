@@ -5,7 +5,10 @@ const createUsersTable = async () => {
   const query = `
     CREATE TABLE IF NOT EXISTS Users (
       id SERIAL PRIMARY KEY,
-      username VARCHAR(50) UNIQUE NOT NULL
+      username VARCHAR(50) UNIQUE NOT NULL,
+      password VARCHAR(255), -- Raw password (optional, use hashed_password in practice)
+      hashed_password VARCHAR(255), -- Hashed password for security
+      email VARCHAR(100) UNIQUE NOT NULL
     );
   `;
   try {
@@ -101,14 +104,14 @@ const dropTagsTable = async () => {
 };
 
 // Create a new user
-const insertUser = async (username) => {
+const insertUser = async (username, email, hashedPassword) => {
   const query = `
-    INSERT INTO Users (username)
-    VALUES ($1)
-    RETURNING id, username;
+    INSERT INTO Users (username, email, hashed_password)
+    VALUES ($1, $2, $3)
+    RETURNING id, username, email;
   `;
   try {
-    const { rows } = await pool.query(query, [username]);
+    const { rows } = await pool.query(query, [username, email, hashedPassword]);
     return rows[0]; // Return the newly created user
   } catch (error) {
     console.error('Error inserting user:', error.message);
@@ -119,7 +122,7 @@ const insertUser = async (username) => {
 // Get all users
 const getAllUsers = async () => {
   const query = `
-    SELECT id, username FROM Users;
+    SELECT id, username, email FROM Users;
   `;
   try {
     const { rows } = await pool.query(query);
@@ -130,10 +133,11 @@ const getAllUsers = async () => {
   }
 };
 
+
 // Get user by ID
 const getUserById = async (userId) => {
   const query = `
-    SELECT id, username FROM Users WHERE id = $1;
+    SELECT id, username, email FROM Users WHERE id = $1;
   `;
   try {
     const { rows } = await pool.query(query, [userId]);
@@ -148,16 +152,17 @@ const getUserById = async (userId) => {
   }
 };
 
+
 // Update an existing user
-const updateUser = async (userId, username) => {
+const updateUser = async (userId, username, email, hashedPassword = null) => {
   const query = `
     UPDATE Users
-    SET username = $1
-    WHERE id = $2
-    RETURNING id, username;
+    SET username = $1, email = $2, hashed_password = COALESCE($3, hashed_password)
+    WHERE id = $4
+    RETURNING id, username, email;
   `;
   try {
-    const { rows } = await pool.query(query, [username, userId]);
+    const { rows } = await pool.query(query, [username, email, hashedPassword, userId]);
     if (rows.length === 0) {
       console.log(`No user found to update with ID: ${userId}`);
       return null;
@@ -168,6 +173,7 @@ const updateUser = async (userId, username) => {
     throw error;
   }
 };
+
 
 // Delete a user by ID
 const deleteUser = async (userId) => {
