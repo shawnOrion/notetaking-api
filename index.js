@@ -1,5 +1,10 @@
+require('dotenv').config(); // Load environment variables from .env file
 const express = require('express');
 const cors = require('cors');
+const session = require('express-session');
+const bcrypt = require('bcrypt');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
 const db = require('./db/queries'); // Import database queries
 
 const app = express();
@@ -7,110 +12,211 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000', // Update to match your frontend URL
+  credentials: true,
+}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'default_secret', // Load session secret from .env or use fallback
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passport configuration
+passport.use(
+  new LocalStrategy(async (username, password, done) => {
+    try {
+      const user = await db.getUserByUsername(username);
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username.' });
+      }
+      const isValid = await bcrypt.compare(password, user.hashed_password);
+      if (!isValid) {
+        return done(null, false, { message: 'Incorrect password.' });
+      }
+      return done(null, user);
+    } catch (error) {
+      return done(error);
+    }
+  })
+);
+
+// Serialize and deserialize user
+passport.serializeUser((user, done) => done(null, user.id));
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await db.getUserById(id);
+    done(null, user);
+  } catch (error) {
+    done(error);
+  }
+});
+
+
+// Routes
+// Signup route
+app.post('/api/signup', async (req, res) => {
+  const { username, password, email } = req.body;
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await db.insertUser(username, email, hashedPassword);
+    res.status(201).json({ message: 'User registered successfully.', user });
+  } catch (error) {
+    console.error('Error during signup:', error.message);
+    res.status(500).json({ error: 'Failed to register user.' });
+  }
+});
+
+// Login route
+app.post('/api/login', passport.authenticate('local'), (req, res) => {
+  res.status(200).json({ message: 'Login successful.', user: req.user });
+});
+
+// Logout route
+app.post('/api/logout', (req, res) => {
+  req.logout((err) => {
+    if (err) {
+      console.error('Error during logout:', err.message);
+      return res.status(500).json({ error: 'Failed to logout.' });
+    }
+    res.status(200).json({ message: 'Logout successful.' });
+  });
+});
+
+// Check authentication status
+app.get('/api/auth/status', (req, res) => {
+  if (req.isAuthenticated()) {
+    res.status(200).json({ isAuthenticated: true, user: req.user });
+  } else {
+    res.status(200).json({ isAuthenticated: false });
+  }
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+
 
 // Routes
 // Create a new user
 app.post('/api/users', async (req, res) => {
-    console.group('Create User');
-    console.log('Request Data:', req.body);
-    const { username } = req.body;
-  
-    try {
-      const user = await db.insertUser(username);
-      console.log('Response Data:', user);
-      res.status(201).json(user);
-    } catch (error) {
-      console.error('Error creating user:', error.message);
-      res.status(500).json({ error: 'Failed to create user.' });
-    } finally {
-      console.groupEnd();
+  console.group('Create User');
+  const { username, email, password } = req.body;
+  console.log('Request Data:', { username, email });
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await db.insertUser(username, email, hashedPassword);
+    console.log('Response Data:', user);
+    res.status(201).json({ id: user.id, username: user.username, email: user.email });
+  } catch (error) {
+    console.error('Error creating user:', error.message);
+    res.status(500).json({ error: 'Failed to create user.' });
+  } finally {
+    console.groupEnd();
+  }
+});
+app.get('/api/users', async (req, res) => {
+  console.group('Get All Users');
+  try {
+    const users = await db.getAllUsers();
+    console.log('Response Data:', users);
+    res.status(200).json(users.map(user => ({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+    }))); // Exclude hashed_password
+  } catch (error) {
+    console.error('Error fetching users:', error.message);
+    res.status(500).json({ error: 'Failed to fetch users.' });
+  } finally {
+    console.groupEnd();
+  }
+});
+ 
+app.get('/api/users/:userId', async (req, res) => {
+  console.group('Get User by ID');
+  const { userId } = req.params;
+  console.log('Request Params:', { userId });
+
+  try {
+    const user = await db.getUserById(userId);
+    if (!user) {
+      console.warn('User not found:', { userId });
+      return res.status(404).json({ error: 'User not found.' });
     }
-  });
-  
-  // Get all users
-  app.get('/api/users', async (req, res) => {
-    console.group('Get All Users');
-    try {
-      const users = await db.getAllUsers();
-      console.log('Response Data:', users);
-      res.status(200).json(users);
-    } catch (error) {
-      console.error('Error fetching users:', error.message);
-      res.status(500).json({ error: 'Failed to fetch users.' });
-    } finally {
-      console.groupEnd();
+    console.log('Response Data:', user);
+    res.status(200).json({
+      id: user.id,
+      username: user.username,
+      email: user.email, // Exclude hashed_password
+    });
+  } catch (error) {
+    console.error('Error fetching user by ID:', error.message);
+    res.status(500).json({ error: 'Failed to fetch user.' });
+  } finally {
+    console.groupEnd();
+  }
+});
+
+app.put('/api/users/:userId', async (req, res) => {
+  console.group('Update User');
+  const { userId } = req.params;
+  const { username, email, password } = req.body;
+  console.log('Request Params:', { userId });
+  console.log('Request Body:', { username, email });
+
+  try {
+    let hashedPassword = null;
+    if (password) {
+      hashedPassword = await bcrypt.hash(password, 10);
     }
-  });
-  
-  // Get user by ID
-  app.get('/api/users/:userId', async (req, res) => {
-    console.group('Get User by ID');
-    const { userId } = req.params;
-    console.log('Request Params:', { userId });
-  
-    try {
-      const user = await db.getUserById(userId);
-      if (!user) {
-        console.warn('User not found:', { userId });
-        return res.status(404).json({ error: 'User not found.' });
-      }
-      console.log('Response Data:', user);
-      res.status(200).json(user);
-    } catch (error) {
-      console.error('Error fetching user by ID:', error.message);
-      res.status(500).json({ error: 'Failed to fetch user.' });
-    } finally {
-      console.groupEnd();
+    const updatedUser = await db.updateUser(userId, username, email, hashedPassword);
+    if (!updatedUser) {
+      console.warn('User not found:', { userId });
+      return res.status(404).json({ error: 'User not found.' });
     }
-  });
-  
-  // Update user
-  app.put('/api/users/:userId', async (req, res) => {
-    console.group('Update User');
-    const { userId } = req.params;
-    const { username } = req.body;
-    console.log('Request Params:', { userId });
-    console.log('Request Body:', { username });
-  
-    try {
-      const updatedUser = await db.updateUser(userId, username);
-      if (!updatedUser) {
-        console.warn('User not found:', { userId });
-        return res.status(404).json({ error: 'User not found.' });
-      }
-      console.log('Response Data:', updatedUser);
-      res.status(200).json(updatedUser);
-    } catch (error) {
-      console.error('Error updating user:', error.message);
-      res.status(500).json({ error: 'Failed to update user.' });
-    } finally {
-      console.groupEnd();
+    console.log('Response Data:', updatedUser);
+    res.status(200).json({
+      id: updatedUser.id,
+      username: updatedUser.username,
+      email: updatedUser.email, // Exclude hashed_password
+    });
+  } catch (error) {
+    console.error('Error updating user:', error.message);
+    res.status(500).json({ error: 'Failed to update user.' });
+  } finally {
+    console.groupEnd();
+  }
+});
+
+// Delete user
+app.delete('/api/users/:userId', async (req, res) => {
+  console.group('Delete User');
+  const { userId } = req.params;
+  console.log('Request Params:', { userId });
+
+  try {
+    const deletedUser = await db.deleteUser(userId);
+    if (!deletedUser) {
+      console.warn('User not found:', { userId });
+      return res.status(404).json({ error: 'User not found.' });
     }
-  });
-  
-  // Delete user
-  app.delete('/api/users/:userId', async (req, res) => {
-    console.group('Delete User');
-    const { userId } = req.params;
-    console.log('Request Params:', { userId });
-  
-    try {
-      const deletedUser = await db.deleteUser(userId);
-      if (!deletedUser) {
-        console.warn('User not found:', { userId });
-        return res.status(404).json({ error: 'User not found.' });
-      }
-      console.log('Response Data:', deletedUser);
-      res.status(200).json(deletedUser);
-    } catch (error) {
-      console.error('Error deleting user:', error.message);
-      res.status(500).json({ error: 'Failed to delete user.' });
-    } finally {
-      console.groupEnd();
-    }
-  });
-  
+    console.log('Response Data:', deletedUser);
+    res.status(200).json(deletedUser);
+  } catch (error) {
+    console.error('Error deleting user:', error.message);
+    res.status(500).json({ error: 'Failed to delete user.' });
+  } finally {
+    console.groupEnd();
+  }
+});
+
   // Get notes for a user
 // Get notes for a user
 app.get('/api/users/:userId/notes', async (req, res) => {
