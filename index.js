@@ -12,10 +12,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(cors({
-  origin: 'http://localhost:3000', // Update to match your frontend URL
-  credentials: true,
-}));
+app.use(cors());
 app.use(
   session({
     secret: process.env.SESSION_SECRET || 'default_secret', // Load session secret from .env or use fallback
@@ -94,11 +91,6 @@ app.get('/api/auth/status', (req, res) => {
   } else {
     res.status(200).json({ isAuthenticated: false });
   }
-});
-
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
 });
 
 
