@@ -56,21 +56,54 @@ passport.deserializeUser(async (id, done) => {
 
 // Routes
 // Signup route
+// Signup route
 app.post('/api/signup', async (req, res) => {
+  console.group('Signup Route');
+  console.log('Request Body:', req.body);
+
   const { username, password, email } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await db.insertUser(username, email, hashedPassword);
-    res.status(201).json({ message: 'User registered successfully.', user });
+    const response = { message: 'User registered successfully.', user };
+    console.log('Response Data:', response);
+    res.status(201).json(response);
   } catch (error) {
     console.error('Error during signup:', error.message);
     res.status(500).json({ error: 'Failed to register user.' });
+  } finally {
+    console.groupEnd();
   }
 });
 
+
 // Login route
-app.post('/api/login', passport.authenticate('local'), (req, res) => {
-  res.status(200).json({ message: 'Login successful.', user: req.user });
+// Login route
+app.post('/api/login', (req, res, next) => {
+  console.group('Login Route');
+  console.log('Request Body:', req.body);
+
+  passport.authenticate('local', (err, user, info) => {
+    if (err) {
+      console.error('Error during login:', err.message);
+      return res.status(500).json({ error: 'Internal server error.' });
+    }
+    if (!user) {
+      console.warn('Login failed:', info.message);
+      return res.status(401).json({ error: info.message });
+    }
+    req.login(user, (err) => {
+      if (err) {
+        console.error('Error during session creation:', err.message);
+        return res.status(500).json({ error: 'Failed to login.' });
+      }
+      const response = { message: 'Login successful.', user };
+      console.log('Response Data:', response);
+      res.status(200).json(response);
+    });
+  })(req, res, next);
+
+  console.groupEnd();
 });
 
 // Logout route
@@ -85,13 +118,24 @@ app.post('/api/logout', (req, res) => {
 });
 
 // Check authentication status
+// Check authentication status
 app.get('/api/auth/status', (req, res) => {
+  console.group('Auth Status Route');
+  console.log('Session Data:', req.session);
+
   if (req.isAuthenticated()) {
-    res.status(200).json({ isAuthenticated: true, user: req.user });
+    const response = { isAuthenticated: true, user: req.user };
+    console.log('Response Data:', response);
+    res.status(200).json(response);
   } else {
-    res.status(200).json({ isAuthenticated: false });
+    const response = { isAuthenticated: false };
+    console.log('Response Data:', response);
+    res.status(200).json(response);
   }
+
+  console.groupEnd();
 });
+
 
 
 // Routes
