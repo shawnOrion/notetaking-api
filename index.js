@@ -27,20 +27,27 @@ app.use(passport.session());
 passport.use(
   new LocalStrategy(async (username, password, done) => {
     try {
-      const user = await db.getUserByUsername(username);
+      // Fetch user authentication data by username
+      const user = await db.getUserAuthDataByUsername(username);
+
       if (!user) {
         return done(null, false, { message: 'Incorrect username.' });
       }
+
+      // Verify the password
       const isValid = await bcrypt.compare(password, user.hashed_password);
       if (!isValid) {
         return done(null, false, { message: 'Incorrect password.' });
       }
+
       return done(null, user);
     } catch (error) {
       return done(error);
     }
   })
 );
+
+
 
 // Serialize and deserialize user
 passport.serializeUser((user, done) => done(null, user.id));
@@ -77,7 +84,6 @@ app.post('/api/signup', async (req, res) => {
 });
 
 
-// Login route
 // Login route
 app.post('/api/login', (req, res, next) => {
   console.group('Login Route');
@@ -117,7 +123,6 @@ app.post('/api/logout', (req, res) => {
   });
 });
 
-// Check authentication status
 // Check authentication status
 app.get('/api/auth/status', (req, res) => {
   console.group('Auth Status Route');

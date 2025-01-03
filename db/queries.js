@@ -132,6 +132,20 @@ const getAllUsers = async () => {
     throw error;
   }
 };
+const getUserAuthDataByUsername = async (username) => {
+  const query = `
+    SELECT id, username, email, hashed_password
+    FROM Users
+    WHERE username = $1;
+  `;
+  try {
+    const { rows } = await pool.query(query, [username]);
+    return rows[0]; // Return the single user object (or undefined if not found)
+  } catch (error) {
+    console.error('Error fetching user by username:', error.message);
+    throw error;
+  }
+};
 
 
 // Get user by ID
@@ -423,4 +437,5 @@ module.exports = {
   deleteNote,
   toggleArchiveNote,
   searchNotes,
+  getUserAuthDataByUsername 
 };

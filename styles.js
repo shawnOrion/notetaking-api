@@ -26,7 +26,16 @@ let styles = `
     flex: 1;
   }
   .create-note-content {
-    composes: note-content;
+    grid-area: content;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1;
   }
   
   .note-edit-textarea {
@@ -42,6 +51,10 @@ let styles = `
     box-sizing: border-box;
     background: transparent;
     transition: all 0.2s ease;
+    font-size: 1.35rem;
+    padding: 1.25rem;
+    line-height: 1.6;
+    max-height: 400px;
   }
   
   .create-note-submit {
@@ -531,7 +544,6 @@ let styles = `
   
   .desktop-main {
     padding: 1rem;
-    overflow-y: hidden;
   }
   .empty-state {
     display: flex;
@@ -590,11 +602,7 @@ let styles = `
       max-height: 90vh;
       overflow-y: auto;
     }
-    .note-edit-textarea {
-      font-size: 1.35rem;
-      padding: 1.25rem;
-      line-height: 1.6;
-    }
+
 
     .notes-list {
       padding: 1rem;
@@ -654,11 +662,7 @@ let styles = `
       max-height: 90vh;
       overflow-y: auto;
     }
-    .note-edit-textarea {
-      font-size: 1.35rem;
-      padding: 1.25rem;
-      line-height: 1.6;
-    }
+
 
     /* Note View and Content */
     .note-view {
@@ -845,11 +849,7 @@ let styles = `
       max-height: 90vh;
       overflow-y: auto;
     }
-    .note-edit-textarea {
-      font-size: 1.35rem;
-      padding: 1.25rem;
-      line-height: 1.6;
-    }
+
 
     .note-view {
       grid-template-columns: 1fr;
